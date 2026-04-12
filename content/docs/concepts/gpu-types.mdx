@@ -1,0 +1,50 @@
+---
+title: GPU Types
+description: Available GPU types on Zylora — specs, VRAM, and use cases.
+---
+
+## Available GPUs
+
+| Slug | GPU | VRAM | Use Case |
+|---|---|---|---|
+| `L4` | NVIDIA L4 | 24 GB | Inference, light fine-tuning |
+| `A10G` | NVIDIA A10G | 24 GB | Inference, diffusion, video |
+| `RTX4090` | NVIDIA RTX 4090 | 24 GB | Local-quality inference with speed |
+| `L40S` | NVIDIA L40S | 48 GB | Large inference, fine-tuning |
+| `A100-40GB` | NVIDIA A100 SXM 40GB | 40 GB | Training, large models |
+| `A100-80GB` | NVIDIA A100 SXM 80GB | 80 GB | 70B+ models, heavy training |
+| `H100-SXM` | NVIDIA H100 SXM 80GB | 80 GB | Fastest inference, training |
+
+## Choosing a GPU
+
+**For LLM inference:**
+- 7B models → `L4` or `A10G` (24 GB fits comfortably)
+- 13B models → `L40S` or `A100-40GB`
+- 70B models → `A100-80GB` or `H100-SXM`
+
+**For image/video generation:**
+- Stable Diffusion → `A10G`
+- SDXL / FLUX → `L40S` or `A100-80GB`
+
+**For training / fine-tuning:**
+- LoRA fine-tuning → `A100-40GB`
+- Full fine-tuning → `A100-80GB` or `H100-SXM`
+
+**For embedding / classification:**
+- `L4` — lowest cost, sufficient for embedding workloads
+
+## Specifying GPU in Code
+
+```python
+@zylora.function(gpu="A100-80GB", memory_gb=80)
+def run_llama(prompt: str) -> str:
+    ...
+```
+
+```bash
+zylora invoke my-org/run --gpu A100-80GB --input '{"prompt": "..."}'
+```
+
+## Multi-GPU (Coming Soon)
+
+Multi-GPU support (`H100-SXM` ×2, ×4, ×8) is on the roadmap. Join the waitlist in the Dashboard.

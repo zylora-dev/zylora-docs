@@ -1,0 +1,75 @@
+---
+title: Model Versioning & A/B Testing
+description: Deploy multiple versions of a function and split traffic between them.
+---
+
+## Overview
+
+Every deploy creates a new version. Versions are immutable — you can roll back, pin, or split traffic between them at any time.
+
+## Listing Versions
+
+```bash
+zylora versions my-org/llama-inference
+```
+
+```
+VERSION   CREATED           STATUS    TRAFFIC
+v3        2 minutes ago     active    100%
+v2        3 hours ago       inactive  0%
+v1        yesterday         inactive  0%
+```
+
+## Rolling Back
+
+```bash
+zylora rollback my-org/llama-inference --version v2
+```
+
+## Pinning Invocations to a Version
+
+```python
+result = client.invoke("my-org/llama-inference", version="v2", input={...})
+```
+
+## A/B Testing (Traffic Splitting)
+
+Split traffic between versions to compare latency, quality, or cost:
+
+```bash
+zylora traffic set my-org/llama-inference \
+  --version v3 --weight 80 \
+  --version v2 --weight 20
+```
+
+```
+VERSION   TRAFFIC
+v3        80%
+v2        20%
+```
+
+Each invocation is routed probabilistically. Invocation logs record which version was used.
+
+## Canary Deployments
+
+Deploy a new version to a small percentage before promoting:
+
+```bash
+# Deploy v4 — auto-assigned 0% traffic
+zylora deploy inference.py
+
+# Canary: 10% live traffic
+zylora traffic set my-org/llama-inference --version v4 --weight 10 --version v3 --weight 90
+
+# Promote when confident
+zylora traffic set my-org/llama-inference --version v4 --weight 100
+```
+
+## Version Metadata
+
+Tag versions for easier management:
+
+```bash
+zylora deploy inference.py --tag "llama3-8b-baseline"
+zylora invoke my-org/llama-inference --tag "llama3-8b-baseline" --input '{...}'
+```

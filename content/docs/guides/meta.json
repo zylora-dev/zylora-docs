@@ -1,0 +1,11 @@
+{
+  "title": "Guides",
+  "pages": [
+    "deploy-function",
+    "streaming-llm",
+    "batch-processing",
+    "custom-docker",
+    "model-versioning",
+    "ci-cd"
+  ]
+}

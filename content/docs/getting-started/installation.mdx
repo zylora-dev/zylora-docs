@@ -1,0 +1,78 @@
+---
+title: Installation
+description: Install the Zylora CLI, Python SDK, and TypeScript SDK.
+---
+
+## CLI
+
+The Zylora CLI is the primary way to deploy and manage functions.
+
+```bash
+# pip
+pip install zylora
+
+# uv (recommended — faster)
+uv tool install zylora
+
+# Verify
+zylora --version
+```
+
+### Environment Variables
+
+| Variable | Description |
+|---|---|
+| `ZYLORA_API_KEY` | API key — overrides config file |
+| `ZYLORA_ORG` | Default organization slug |
+| `ZYLORA_API_URL` | Override API base URL (for self-hosted) |
+
+### Config File
+
+The CLI stores credentials in `~/.zylora/config.toml`:
+
+```toml
+[auth]
+api_key = "zy_live_..."
+org = "my-org"
+```
+
+## Python SDK
+
+```bash
+pip install zylora
+# or
+uv add zylora
+```
+
+### Requirements
+
+- Python 3.10+
+- No GPU required on the calling machine — compute runs on Zylora's infrastructure
+
+## TypeScript SDK
+
+```bash
+pnpm add @zylora/sdk
+# or
+npm install @zylora/sdk
+```
+
+### Requirements
+
+- Node.js 20+
+- TypeScript 5.0+ (optional but recommended)
+
+## Docker
+
+If you're deploying with a custom Docker image, the Zylora runner is available as a base image:
+
+```dockerfile
+FROM ghcr.io/zylora-dev/runner:latest
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+```
+
+See [Custom Docker Images](/docs/guides/custom-docker) for the full guide.

@@ -1,0 +1,99 @@
+---
+title: CI/CD Integration
+description: Automate deployments with GitHub Actions and other CI/CD platforms.
+---
+
+## GitHub Actions
+
+### Basic Deploy on Push
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to Zylora
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Zylora CLI
+        run: pip install zylora
+
+      - name: Deploy
+        run: zylora deploy inference.py
+        env:
+          ZYLORA_API_KEY: ${{ secrets.ZYLORA_API_KEY }}
+          ZYLORA_ORG: my-org
+```
+
+### Deploy with Preview Environments
+
+```yaml
+name: Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install CLI
+        run: pip install zylora
+
+      - name: Deploy preview
+        id: deploy
+        run: |
+          VERSION=$(zylora deploy inference.py --tag "pr-${{ github.event.number }}" --json | jq -r '.version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        env:
+          ZYLORA_API_KEY: ${{ secrets.ZYLORA_API_KEY_CI }}
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 Deployed preview version \`${{ steps.deploy.outputs.version }}\`\n\nTest it: \`zylora invoke my-org/inference --version ${{ steps.deploy.outputs.version }} --input '{"prompt":"hello"}'\``
+            })
+```
+
+## GitLab CI
+
+```yaml
+# .gitlab-ci.yml
+deploy:
+  stage: deploy
+  image: python:3.11
+  script:
+    - pip install zylora
+    - zylora deploy inference.py
+  variables:
+    ZYLORA_API_KEY: $ZYLORA_API_KEY
+  only:
+    - main
+```
+
+## Using CI API Keys
+
+Create a CI-scoped key in Dashboard → Settings → API Keys with **Deploy only** permissions. Never use your live key in CI.
+
+<Callout type="warn">
+Store API keys as encrypted CI secrets — never in code or config files.
+</Callout>

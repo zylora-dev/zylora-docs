@@ -1,0 +1,86 @@
+---
+title: API Reference
+description: Zylora REST API — auto-generated from the OpenAPI 3.1 spec.
+---
+
+The full Zylora API reference is generated from the OpenAPI 3.1 spec at `contracts/openapi/zylora.yaml`.
+
+## Base URL
+
+```
+https://api.zylora.dev
+```
+
+## Authentication
+
+All endpoints require a bearer token:
+
+```http
+Authorization: Bearer zy_live_...
+```
+
+## Core Endpoints
+
+### Functions
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/v1/functions` | List functions |
+| `POST` | `/v1/functions` | Create a function |
+| `GET` | `/v1/functions/{id}` | Get function |
+| `PATCH` | `/v1/functions/{id}` | Update function metadata |
+| `DELETE` | `/v1/functions/{id}` | Delete function |
+| `POST` | `/v1/functions/{id}/invoke` | Invoke (sync) |
+| `POST` | `/v1/functions/{id}/invoke/stream` | Invoke (SSE stream) |
+| `POST` | `/v1/functions/{id}/map` | Batch invoke |
+
+### Deployments
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/v1/functions/{id}/deployments` | List deployments/versions |
+| `GET` | `/v1/deployments/{id}` | Get deployment |
+| `GET` | `/v1/deployments/{id}/logs` | Stream build logs (SSE) |
+
+### Billing
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/v1/billing/balance` | Credit balance |
+| `GET` | `/v1/billing/usage` | Usage summary |
+| `GET` | `/v1/billing/invoices` | Invoice list |
+
+### GPU Pricing
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/v1/gpu-types` | List GPU types with live pricing |
+
+## Error Format
+
+All errors return:
+
+```json
+{
+  "error": {
+    "code": "function_not_found",
+    "message": "Function 'my-org/missing' does not exist.",
+    "request_id": "01966d9c-3b2b-7000-b3a5-4f2e1d8c9a7b"
+  }
+}
+```
+
+## Rate Limits
+
+Every response includes:
+
+```http
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 998
+X-RateLimit-Reset: 1744480800
+X-Request-Id: 01966d9c-3b2b-7000-b3a5-4f2e1d8c9a7b
+```
+
+<Callout type="info">
+The interactive API reference (Scalar) will be available at [api.zylora.dev/docs](https://api.zylora.dev/docs).
+</Callout>

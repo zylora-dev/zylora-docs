@@ -1,0 +1,57 @@
+---
+title: Scaling Behavior
+description: How Zylora scales your functions — cold starts, warm instances, and concurrency.
+---
+
+## Concurrency Model
+
+Each function invocation runs on its own isolated GPU instance. There are no shared GPU processes between invocations.
+
+- **Cold start**: Provision a new instance, restore VRAM snapshot, execute
+- **Warm instance**: Execute immediately on an already-running instance (rare — Zylora is serverless-first)
+
+## Cold Start Latency
+
+| Scenario | Latency |
+|---|---|
+| First deploy (no snapshot) | ~8–15s (image pull + model load) |
+| Subsequent invocations (snapshot exists) | < 250ms |
+| After redeploy (new version) | ~8–15s (new snapshot built on first call) |
+
+VRAM snapshots are built automatically on the first invocation of a new version and cached in Cloudflare R2.
+
+## Concurrency Limits
+
+Concurrent instances are capped per plan:
+
+| Plan | Max Concurrent |
+|---|---|
+| Dev | 5 |
+| Pro | 50 |
+| Scale | 500 |
+| Enterprise | Custom |
+
+When the limit is reached, additional requests are queued (up to 30s) before returning a `QuotaExceededError`.
+
+## Autoscaling
+
+Zylora routes invocations across all available provider capacity. There is no pre-configuration required — concurrency scales automatically up to your plan limit.
+
+## Keepalive (Coming Soon)
+
+For latency-sensitive workloads, you'll be able to pin a minimum number of warm instances per function. This guarantees sub-10ms dispatch (still not counting model inference time).
+
+```python
+# Future API — not yet available
+@zylora.function(gpu="A100-40GB", min_instances=2)
+def run(prompt: str) -> str:
+    ...
+```
+
+## Instance Isolation
+
+Every invocation gets:
+- A fresh filesystem (ephemeral `/tmp`)
+- Isolated GPU memory (restored from snapshot)
+- A clean network namespace
+- No access to other tenants' instances

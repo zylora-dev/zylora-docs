@@ -1,0 +1,53 @@
+---
+title: Pricing Model
+description: How Zylora billing works — GPU-milliseconds, credits, and plans.
+---
+
+## How You're Billed
+
+Zylora charges for GPU compute time in **milliseconds** — from the moment your function starts executing to the moment it returns. You never pay for idle time.
+
+**Cost = (GPU rate per second) × (execution time in ms) / 1000**
+
+All billing is in integer cents internally. Displayed as dollars in the dashboard.
+
+## GPU Rates
+
+| GPU | VRAM | Rate / sec |
+|---|---|---|
+| NVIDIA A10G | 24 GB | $0.00032 |
+| NVIDIA A100 40GB | 40 GB | $0.00098 |
+| NVIDIA A100 80GB | 80 GB | $0.00148 |
+| NVIDIA H100 SXM | 80 GB | $0.00285 |
+| NVIDIA L4 | 24 GB | $0.00024 |
+| NVIDIA L40S | 48 GB | $0.00065 |
+| NVIDIA RTX 4090 | 24 GB | $0.00038 |
+
+Full pricing at [zylora.dev/gpu-pricing](https://zylora.dev/gpu-pricing).
+
+## Plans
+
+| | Dev | Pro | Scale | Enterprise |
+|---|---|---|---|---|
+| Monthly credit | $10 | $50 | Custom | Custom |
+| Concurrent instances | 5 | 50 | 500 | Unlimited |
+| Cold start SLA | Best effort | < 500ms | < 250ms | < 100ms |
+| Support | Community | Email | Dedicated Slack | Dedicated team |
+
+## Credits
+
+- Credits are pre-purchased and deducted per invocation
+- Unused credits roll over month-to-month (no expiry)
+- Auto-recharge available when balance drops below a threshold
+- [Startup program](/docs/concepts/pricing) offers $10,000 in credits
+
+## Spend Controls
+
+Set a monthly or per-function spend cap via the Dashboard or API:
+
+```bash
+# Set a $500/month global cap
+zylora config set spend-cap 50000  # integer cents
+```
+
+When the cap is reached, invocations return a `QuotaExceededError` until the next billing period or until the cap is increased.

@@ -1,0 +1,75 @@
+---
+title: Batch Processing with .map()
+description: Run a function over a list of inputs in parallel using .map().
+---
+
+## Overview
+
+`.map()` fans out a list of inputs to parallel function invocations. All inputs run simultaneously (up to your concurrency limit) and results are collected in order.
+
+## Python
+
+```python
+import zylora
+
+@zylora.function(gpu="L4", memory_gb=24)
+def embed(text: str) -> list[float]:
+    from sentence_transformers import SentenceTransformer
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    return model.encode(text).tolist()
+
+
+if __name__ == "__main__":
+    texts = [
+        "The quick brown fox",
+        "Serverless GPU compute",
+        "Zylora is fast",
+    ]
+
+    # Runs all 3 in parallel — each on its own GPU instance
+    embeddings = embed.map(texts)
+    print(embeddings)  # list of 3 embedding vectors
+```
+
+## TypeScript
+
+```typescript
+import { ZyloraClient } from "@zylora/sdk";
+
+const client = new ZyloraClient({ apiKey: process.env.ZYLORA_API_KEY });
+
+const texts = ["The quick brown fox", "Serverless GPU compute", "Zylora is fast"];
+
+const results = await client.map("my-org/embed", {
+  inputs: texts.map((text) => ({ text })),
+});
+
+console.log(results); // [{ output: [...] }, { output: [...] }, { output: [...] }]
+```
+
+## Error Handling
+
+By default, `.map()` collects errors per-item without short-circuiting:
+
+```python
+results = embed.map(texts, on_error="collect")
+
+for i, result in enumerate(results):
+    if result.error:
+        print(f"Item {i} failed: {result.error}")
+    else:
+        print(f"Item {i}: {result.output[:5]}...")
+```
+
+## Concurrency Limits
+
+Concurrency is determined by your plan's concurrent instance limit. For large batches, items are queued and processed as workers become available.
+
+| Plan | Max Concurrent Instances |
+|---|---|
+| Dev | 5 |
+| Pro | 50 |
+| Scale | 500 |
+| Enterprise | Custom |
+
+See [Pricing](/docs/concepts/pricing) for full plan details.

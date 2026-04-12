@@ -1,0 +1,98 @@
+---
+title: Streaming LLM Responses
+description: Stream tokens from your LLM function back to the client in real time using SSE.
+---
+
+## Overview
+
+Zylora supports Server-Sent Events (SSE) for streaming output. Use `.stream()` instead of `.invoke()` to get a token stream as the model generates.
+
+## Python: Yield from Your Function
+
+Yield strings from your function to stream:
+
+```python
+import zylora
+
+@zylora.function(gpu="A100-80GB", memory_gb=80)
+def generate(prompt: str, max_tokens: int = 512):
+    from transformers import AutoTokenizer, AutoModelForCausalLM, TextIteratorStreamer
+    import threading
+
+    model_id = "meta-llama/Llama-3-8B-Instruct"
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
+
+    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+
+    thread = threading.Thread(
+        target=model.generate,
+        kwargs=dict(
+            **inputs,
+            streamer=streamer,
+            max_new_tokens=max_tokens,
+        ),
+    )
+    thread.start()
+
+    for token in streamer:
+        yield token  # each yield sends an SSE event
+```
+
+## TypeScript: Consume the Stream
+
+```typescript
+import { ZyloraClient } from "@zylora/sdk";
+
+const client = new ZyloraClient({ apiKey: process.env.ZYLORA_API_KEY });
+
+const stream = client.stream("my-org/generate", {
+  input: { prompt: "Write a haiku about GPUs.", max_tokens: 100 },
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.output); // stream token by token
+}
+```
+
+## Next.js Streaming Route
+
+```typescript
+// app/api/chat/route.ts
+import { ZyloraClient } from "@zylora/sdk";
+
+export async function POST(req: Request) {
+  const { prompt } = await req.json();
+  const client = new ZyloraClient({ apiKey: process.env.ZYLORA_API_KEY! });
+
+  const zyStream = client.stream("my-org/generate", { input: { prompt } });
+
+  const encoder = new TextEncoder();
+  const readable = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of zyStream) {
+        controller.enqueue(encoder.encode(chunk.output));
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(readable, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+}
+```
+
+## Cancellation
+
+```typescript
+const stream = client.stream("my-org/generate", { input: { prompt } });
+
+// Cancel after 5 seconds
+setTimeout(() => stream.cancel(), 5000);
+
+for await (const chunk of stream) {
+  console.log(chunk.output);
+}
+```

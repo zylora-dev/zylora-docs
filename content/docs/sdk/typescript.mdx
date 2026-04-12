@@ -1,0 +1,134 @@
+---
+title: TypeScript SDK
+description: Complete reference for the Zylora TypeScript SDK — client setup, invoke, stream, and batch.
+---
+
+## Installation
+
+```bash
+pnpm add @zylora/sdk
+# or
+npm install @zylora/sdk
+```
+
+## Client Setup
+
+```typescript
+import { ZyloraClient } from "@zylora/sdk";
+
+const client = new ZyloraClient({
+  apiKey: process.env.ZYLORA_API_KEY!, // required
+  baseUrl: "https://api.zylora.dev",   // optional — default shown
+  timeout: 30_000,                      // optional — ms, default 30s
+});
+```
+
+## `client.invoke()`
+
+Invoke a deployed function and wait for the result.
+
+```typescript
+const result = await client.invoke("my-org/my-function", {
+  input: { prompt: "Hello" },
+  version: "v3",       // optional — pin to a specific version
+  timeout: 60_000,     // optional — override client timeout
+});
+
+console.log(result.output);       // function return value
+console.log(result.invocationId); // UUID v7
+console.log(result.latencyMs);    // end-to-end latency
+console.log(result.costCents);    // integer cents
+```
+
+## `client.stream()`
+
+Stream output from a function that yields tokens.
+
+```typescript
+const stream = client.stream("my-org/generate", {
+  input: { prompt: "Write a poem about GPUs.", max_tokens: 200 },
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.output);
+}
+
+// Final result with metadata
+const final = await stream.result();
+console.log(final.costCents);
+```
+
+### Cancellation
+
+```typescript
+const stream = client.stream("my-org/generate", { input: { prompt } });
+
+const abortController = new AbortController();
+setTimeout(() => abortController.abort(), 5000);
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.output);
+}
+```
+
+## `client.map()`
+
+Fan out over a list of inputs in parallel.
+
+```typescript
+const results = await client.map("my-org/embed", {
+  inputs: texts.map((text) => ({ text })),
+  concurrency: 10, // optional — max parallel invocations
+});
+
+results.forEach((r, i) => {
+  if (r.error) {
+    console.error(`Input ${i} failed:`, r.error);
+  } else {
+    console.log(`Input ${i}:`, r.output);
+  }
+});
+```
+
+## Types
+
+```typescript
+import type {
+  InvokeResult,
+  StreamChunk,
+  MapResult,
+  ZyloraClientOptions,
+} from "@zylora/sdk";
+```
+
+### `InvokeResult`
+
+```typescript
+interface InvokeResult<T = unknown> {
+  output: T;
+  invocationId: string;   // UUID v7
+  latencyMs: number;
+  gpuMs: number;
+  costCents: number;      // integer cents
+  version: string;
+  gpuType: string;
+}
+```
+
+## Error Handling
+
+```typescript
+import { ZyloraError, InvocationError, TimeoutError } from "@zylora/sdk";
+
+try {
+  const result = await client.invoke("my-org/my-function", { input: {} });
+} catch (err) {
+  if (err instanceof InvocationError) {
+    console.error("Function threw:", err.message, err.tracebackUrl);
+  } else if (err instanceof TimeoutError) {
+    console.error("Timed out after", err.timeoutMs, "ms");
+  } else if (err instanceof ZyloraError) {
+    console.error("Zylora error:", err.code, err.message);
+  }
+}
+```

@@ -1,0 +1,59 @@
+---
+title: Architecture
+description: How Zylora works under the hood — from deploy to invocation.
+---
+
+## Overview
+
+Zylora is a serverless GPU runtime built on a provider-agnostic architecture. Functions are deployed as Docker containers and run on demand across multiple GPU cloud providers.
+
+```
+┌─────────────────────────────────────┐
+│           Your Code                 │
+│  @zylora.function / SDK / CLI       │
+└──────────────┬──────────────────────┘
+               │ HTTPS
+┌──────────────▼──────────────────────┐
+│         Zylora API Gateway          │
+│   Auth · Rate Limit · Request ID    │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│         Core Engine (Rust)          │
+│  Router · Scheduler · Metering      │
+└────┬──────────────────────┬─────────┘
+     │                      │
+┌────▼─────┐          ┌─────▼──────┐
+│ RunPod   │          │  Vast.ai   │  ← GPU Providers
+│ (A100s)  │          │  (H100s)   │
+└──────────┘          └────────────┘
+```
+
+## Request Lifecycle
+
+1. **API Gateway** receives the invocation request, verifies the bearer token, checks rate limits, and assigns a `request_id` (UUID v7).
+2. **Router** selects the optimal GPU provider based on availability, cost, and latency targets.
+3. **Scheduler** starts a cold container or routes to a warm instance. If a VRAM snapshot exists for this function version, it's restored in under 250ms.
+4. **Runner** executes the function inside the container, streams output if yielding, and reports usage events.
+5. **Metering** records GPU-milliseconds and writes a `usage_event` for billing.
+6. **Response** is returned to the caller with full timing and cost metadata.
+
+## VRAM Snapshots
+
+The key to Zylora's sub-250ms cold starts. When a function completes:
+
+1. GPU memory state is serialized (LZ4-compressed) and stored in Cloudflare R2.
+2. On the next cold start, the snapshot is restored via `cudaMemcpy` — bypassing model loading entirely.
+
+Snapshots are version-pinned and invalidated on redeploy.
+
+## Provider Abstraction
+
+All GPU providers are behind a `GpuProvider` trait. Zylora routes across RunPod, Vast.ai, and GCP dynamically based on spot pricing and availability. Provider failures are handled transparently with automatic rerouting.
+
+## Durability
+
+- All entity IDs are UUID v7 (time-sortable, no hotspots)
+- All timestamps are UTC with timezone info (`TIMESTAMPTZ`)
+- Usage events are append-only with partition pruning by month
+- Billing is in integer cents — no floating point

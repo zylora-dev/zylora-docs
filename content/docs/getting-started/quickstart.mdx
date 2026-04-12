@@ -1,0 +1,92 @@
+---
+title: Quickstart
+description: Deploy your first GPU function in under 5 minutes.
+---
+
+## Prerequisites
+
+- Python 3.10+
+- A free Zylora account — [sign up at zylora.dev](https://zylora.dev)
+
+## 1. Install the CLI
+
+```bash
+pip install zylora
+# or with uv (recommended)
+uv tool install zylora
+```
+
+## 2. Log in
+
+```bash
+zylora login
+```
+
+This opens your browser and authenticates via your Zylora account. Your API key is stored in `~/.zylora/config.toml`.
+
+## 3. Write a function
+
+Create `inference.py`:
+
+```python
+import zylora
+
+@zylora.function(gpu="A100-40GB", memory_gb=40)
+def run(prompt: str) -> dict:
+    from transformers import pipeline
+    pipe = pipeline("text-generation", model="gpt2")
+    output = pipe(prompt, max_new_tokens=100)
+    return {"text": output[0]["generated_text"]}
+```
+
+## 4. Deploy
+
+```bash
+zylora deploy inference.py
+```
+
+Zylora builds a Docker image, pushes it to the registry, and returns a live endpoint URL:
+
+```
+✓ Built image in 42s
+✓ Pushed to registry
+✓ Deployed as: my-org/run
+  Endpoint: https://api.zylora.dev/v1/functions/my-org/run/invoke
+```
+
+## 5. Invoke
+
+**From the CLI:**
+
+```bash
+zylora invoke my-org/run --input '{"prompt": "Once upon a time"}'
+```
+
+**From Python:**
+
+```python
+import zylora
+
+result = zylora.run.remote(prompt="Once upon a time")
+print(result["text"])
+```
+
+**From TypeScript:**
+
+```typescript
+import { ZyloraClient } from "@zylora/sdk";
+
+const client = new ZyloraClient({ apiKey: process.env.ZYLORA_API_KEY });
+const result = await client.invoke("my-org/run", {
+  input: { prompt: "Once upon a time" },
+});
+console.log(result.output.text);
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="Configure the CLI" href="/docs/getting-started/installation" description="Full install options, environment variables, config file" />
+  <Card title="Authentication" href="/docs/getting-started/authentication" description="API keys, OIDC, team scopes" />
+  <Card title="Streaming LLMs" href="/docs/guides/streaming-llm" description="Stream tokens back in real time" />
+</Cards>

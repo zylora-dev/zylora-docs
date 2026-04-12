@@ -1,0 +1,48 @@
+---
+title: Introduction
+description: Zylora is a serverless GPU runtime. Deploy ML models as functions, pay only for what you use.
+---
+
+## What is Zylora?
+
+Zylora lets you deploy any Python ML function as a serverless GPU endpoint in minutes — no infrastructure to manage, no idle costs.
+
+```python
+import zylora
+
+@zylora.function(gpu="A100", memory_gb=40)
+def run_inference(prompt: str) -> str:
+    import torch
+    from transformers import pipeline
+    pipe = pipeline("text-generation", model="meta-llama/Llama-3-8B")
+    return pipe(prompt)[0]["generated_text"]
+```
+
+Call it from anywhere:
+
+```typescript
+import { ZyloraClient } from "@zylora/sdk";
+
+const client = new ZyloraClient({ apiKey: process.env.ZYLORA_API_KEY });
+const result = await client.invoke("my-org/llama-inference", {
+  input: { prompt: "Explain transformers in one sentence." },
+});
+```
+
+## Key Features
+
+- **Cold start < 250ms** — VRAM snapshots restore GPU state instantly
+- **Any GPU** — A100, H100, RTX 4090, L40S and more
+- **Pay per millisecond** — no reserved instances, no minimums
+- **Any framework** — PyTorch, JAX, TensorFlow, ONNX
+- **Streaming** — SSE streaming for LLM token-by-token output
+- **Batch** — `.map()` for parallel batch jobs
+
+## Quick Links
+
+<Cards>
+  <Card title="Quickstart" href="/docs/getting-started/quickstart" description="Deploy your first function in 5 minutes" />
+  <Card title="Python SDK" href="/docs/sdk/python" description="Full Python SDK reference" />
+  <Card title="TypeScript SDK" href="/docs/sdk/typescript" description="Full TypeScript SDK reference" />
+  <Card title="CLI Reference" href="/docs/cli" description="All CLI commands with examples" />
+</Cards>

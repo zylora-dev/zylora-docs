@@ -1,0 +1,80 @@
+---
+title: Authentication
+description: API keys, CLI login, and team scopes.
+---
+
+## API Keys
+
+All Zylora API requests are authenticated with a bearer token. Create API keys in the [Dashboard → Settings → API Keys](https://app.zylora.dev/settings/api-keys).
+
+### Key Types
+
+| Type | Prefix | Use Case |
+|---|---|---|
+| Live key | `zy_live_...` | Production — full access |
+| Test key | `zy_test_...` | Development — invocations billed but isolated |
+| CI key | `zy_ci_...` | Scoped to deploy-only, no billing write access |
+
+### Using an API Key
+
+**Environment variable (recommended):**
+
+```bash
+export ZYLORA_API_KEY=zy_live_...
+```
+
+**Python SDK:**
+
+```python
+import zylora
+
+client = zylora.Client(api_key="zy_live_...")
+```
+
+**TypeScript SDK:**
+
+```typescript
+import { ZyloraClient } from "@zylora/sdk";
+
+const client = new ZyloraClient({
+  apiKey: process.env.ZYLORA_API_KEY!,
+});
+```
+
+**HTTP header:**
+
+```http
+Authorization: Bearer zy_live_...
+```
+
+## CLI Login
+
+The CLI uses OAuth 2.0 device authorization:
+
+```bash
+zylora login
+# Opens browser → authorizes → stores key in ~/.zylora/config.toml
+```
+
+To log out:
+
+```bash
+zylora logout
+```
+
+To switch organizations:
+
+```bash
+zylora config set org <org-slug>
+```
+
+## Key Security
+
+<Callout type="warn">
+Never commit API keys to version control. Use environment variables or a secrets manager.
+</Callout>
+
+- Keys are hashed (SHA-256) before storage — Zylora cannot recover a lost key
+- Rotate keys immediately if compromised via the Dashboard
+- CI keys should have the minimum required scope
+- Keys inherit the permissions of the user who created them

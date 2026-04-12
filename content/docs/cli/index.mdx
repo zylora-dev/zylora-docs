@@ -1,0 +1,176 @@
+---
+title: CLI Reference
+description: All Zylora CLI commands with examples.
+---
+
+## Installation
+
+```bash
+pip install zylora
+# or
+uv tool install zylora
+```
+
+## Global Flags
+
+| Flag | Description |
+|---|---|
+| `--api-key <key>` | Override the API key for this command |
+| `--org <slug>` | Override the active organization |
+| `--json` | Output as JSON (machine-readable) |
+| `--help` | Show help |
+
+---
+
+## Auth
+
+### `zylora login`
+
+Open browser and authenticate via OAuth.
+
+```bash
+zylora login
+```
+
+### `zylora logout`
+
+Remove stored credentials.
+
+```bash
+zylora logout
+```
+
+---
+
+## Config
+
+### `zylora config set`
+
+```bash
+zylora config set org <slug>
+zylora config set api-url <url>
+```
+
+### `zylora config get`
+
+```bash
+zylora config get
+```
+
+---
+
+## Functions
+
+### `zylora deploy`
+
+Build and deploy a function.
+
+```bash
+zylora deploy <file.py> [options]
+
+Options:
+  --name <slug>         Override function name (default: file basename)
+  --tag <tag>           Tag this version
+  --dockerfile <path>   Path to custom Dockerfile
+  --no-wait             Return immediately without waiting for build
+  --json                Output deploy result as JSON
+```
+
+### `zylora invoke`
+
+Invoke a deployed function.
+
+```bash
+zylora invoke <function> [options]
+
+Options:
+  --input <json>        Input JSON string
+  --input-file <path>   Read input from file
+  --version <v>         Pin to a specific version
+  --stream              Stream output (for streaming functions)
+  --json                Output result as JSON
+```
+
+### `zylora list`
+
+List functions in the active org.
+
+```bash
+zylora list [--json]
+```
+
+### `zylora delete`
+
+Delete a function and all its versions.
+
+```bash
+zylora delete <function> [--yes]
+```
+
+---
+
+## Versions
+
+### `zylora versions`
+
+List versions of a function.
+
+```bash
+zylora versions <function>
+```
+
+### `zylora rollback`
+
+Roll back to a previous version.
+
+```bash
+zylora rollback <function> --version <v>
+```
+
+### `zylora traffic`
+
+Split traffic between versions.
+
+```bash
+zylora traffic set <function> --version <v1> --weight 80 --version <v2> --weight 20
+```
+
+---
+
+## Logs
+
+### `zylora logs`
+
+Stream invocation logs.
+
+```bash
+zylora logs <function> [options]
+
+Options:
+  --tail            Follow live logs
+  --since <time>    Show logs since (e.g., 1h, 30m, 2026-04-01)
+  --limit <n>       Number of log lines (default: 100)
+```
+
+---
+
+## Secrets
+
+### `zylora secret set`
+
+```bash
+zylora secret set HF_TOKEN=hf_...
+zylora secret set --file .env.production
+```
+
+### `zylora secret list`
+
+```bash
+zylora secret list
+```
+
+### `zylora secret delete`
+
+```bash
+zylora secret delete HF_TOKEN
+```

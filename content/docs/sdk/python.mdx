@@ -1,0 +1,123 @@
+---
+title: Python SDK
+description: Complete reference for the Zylora Python SDK — decorators, invocation methods, and error types.
+---
+
+## Installation
+
+```bash
+pip install zylora
+# or
+uv add zylora
+```
+
+## Client Setup
+
+```python
+import zylora
+
+# Uses ZYLORA_API_KEY env var automatically
+client = zylora.Client()
+
+# Explicit key
+client = zylora.Client(api_key="zy_live_...")
+```
+
+## @zylora.function Decorator
+
+```python
+@zylora.function(
+    gpu="A100-40GB",        # GPU type
+    memory_gb=40,           # VRAM in GB
+    cpu=4,                  # vCPU count
+    ram_gb=16,              # System RAM in GB
+    timeout_secs=300,       # Max wall time (default: 300)
+    retries=0,              # Auto-retry count (default: 0)
+    secrets=["HF_TOKEN"],   # Inject secrets as env vars
+    dockerfile="./Dockerfile",  # Custom Dockerfile (optional)
+)
+def my_function(input: str) -> str:
+    ...
+```
+
+### GPU Types
+
+See [GPU Types](/docs/concepts/gpu-types) for the full list of available GPU slugs.
+
+## Invocation Methods
+
+### `.remote()` — Async remote call
+
+```python
+# Runs synchronously from the caller's perspective
+result = my_function.remote(prompt="Hello")
+```
+
+### `.invoke()` — Explicit invocation
+
+```python
+result = client.invoke("my-org/my-function", input={"prompt": "Hello"})
+print(result.output)
+print(result.latency_ms)
+print(result.cost_cents)
+```
+
+### `.stream()` — SSE streaming
+
+```python
+for chunk in client.stream("my-org/generate", input={"prompt": "Hello"}):
+    print(chunk.output, end="", flush=True)
+```
+
+Functions must `yield` strings to support streaming.
+
+### `.map()` — Parallel batch
+
+```python
+results = my_function.map(["input1", "input2", "input3"])
+# Returns list in input order, even if some complete out of order
+```
+
+```python
+# Collect errors per-item without short-circuiting
+results = my_function.map(inputs, on_error="collect")
+for r in results:
+    if r.error:
+        print(r.error)
+```
+
+### `.spawn()` — Fire and forget
+
+```python
+handle = my_function.spawn(prompt="Hello")
+# ... do other work ...
+result = handle.get(timeout=60)  # block until complete
+```
+
+## Error Types
+
+```python
+from zylora.exceptions import (
+    ZyloraError,          # Base class
+    AuthenticationError,  # Invalid/missing API key
+    FunctionNotFoundError,# Function slug doesn't exist
+    InvocationError,      # Function raised an exception
+    TimeoutError,         # Exceeded timeout_secs
+    QuotaExceededError,   # Concurrency or credit limit hit
+    BuildError,           # Docker build failed
+)
+```
+
+## Invocation Result
+
+```python
+result = client.invoke("my-org/my-function", input={...})
+
+result.output        # dict — the function's return value
+result.invocation_id # str — UUID v7
+result.latency_ms    # int — end-to-end latency
+result.gpu_ms        # int — time spent on GPU
+result.cost_cents    # int — cost in integer cents (1/100 of a dollar)
+result.version       # str — function version used
+result.gpu_type      # str — GPU that ran the invocation
+```
