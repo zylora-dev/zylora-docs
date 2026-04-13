@@ -8,15 +8,14 @@ description: Install the Zylora CLI, Python SDK, and TypeScript SDK.
 The Zylora CLI is the primary way to deploy and manage functions.
 
 ```bash
-# pip
-pip install zylora
-
-# uv (recommended — faster)
-uv tool install zylora
+# Install Rust CLI binary (`zy`)
+cargo install --git https://github.com/zylora-dev/zylora-cli --bin zy
 
 # Verify
-zylora --version
+zy --version
 ```
+
+> The Python package `zylora` does not install the CLI binary.
 
 ### Environment Variables
 
@@ -43,6 +42,8 @@ pip install zylora
 # or
 uv add zylora
 ```
+
+This installs the Python SDK for `import zylora` and programmatic invocation.
 
 ### Requirements
 

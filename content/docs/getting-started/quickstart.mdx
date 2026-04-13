@@ -11,15 +11,16 @@ description: Deploy your first GPU function in under 5 minutes.
 ## 1. Install the CLI
 
 ```bash
-pip install zylora
-# or with uv (recommended)
-uv tool install zylora
+# Install Rust CLI binary from source repo
+cargo install --git https://github.com/zylora-dev/zylora-cli --bin zy
 ```
+
+> `pip install zylora` installs the Python SDK only (importable module), not the CLI binary.
 
 ## 2. Log in
 
 ```bash
-zylora login
+zy login
 ```
 
 This opens your browser and authenticates via your Zylora account. Your API key is stored in `~/.zylora/config.toml`.
@@ -42,7 +43,7 @@ def run(prompt: str) -> dict:
 ## 4. Deploy
 
 ```bash
-zylora deploy inference.py
+zy deploy inference.py
 ```
 
 Zylora builds a Docker image, pushes it to the registry, and returns a live endpoint URL:
@@ -59,7 +60,7 @@ Zylora builds a Docker image, pushes it to the registry, and returns a live endp
 **From the CLI:**
 
 ```bash
-zylora invoke my-org/run --input '{"prompt": "Once upon a time"}'
+zy invoke my-org/run --input '{"prompt": "Once upon a time"}'
 ```
 
 **From Python:**

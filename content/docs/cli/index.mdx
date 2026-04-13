@@ -6,10 +6,10 @@ description: All Zylora CLI commands with examples.
 ## Installation
 
 ```bash
-pip install zylora
-# or
-uv tool install zylora
+cargo install --git https://github.com/zylora-dev/zylora-cli --bin zy
 ```
+
+The CLI command is `zy`.
 
 ## Global Flags
 
@@ -24,49 +24,49 @@ uv tool install zylora
 
 ## Auth
 
-### `zylora login`
+### `zy login`
 
 Open browser and authenticate via OAuth.
 
 ```bash
-zylora login
+zy login
 ```
 
-### `zylora logout`
+### `zy logout`
 
 Remove stored credentials.
 
 ```bash
-zylora logout
+zy logout
 ```
 
 ---
 
 ## Config
 
-### `zylora config set`
+### `zy config set`
 
 ```bash
-zylora config set org <slug>
-zylora config set api-url <url>
+zy config set org <slug>
+zy config set api-url <url>
 ```
 
-### `zylora config get`
+### `zy config get`
 
 ```bash
-zylora config get
+zy config get
 ```
 
 ---
 
 ## Functions
 
-### `zylora deploy`
+### `zy deploy`
 
 Build and deploy a function.
 
 ```bash
-zylora deploy <file.py> [options]
+zy deploy <file.py> [options]
 
 Options:
   --name <slug>         Override function name (default: file basename)
@@ -76,12 +76,12 @@ Options:
   --json                Output deploy result as JSON
 ```
 
-### `zylora invoke`
+### `zy invoke`
 
 Invoke a deployed function.
 
 ```bash
-zylora invoke <function> [options]
+zy invoke <function> [options]
 
 Options:
   --input <json>        Input JSON string
@@ -91,60 +91,60 @@ Options:
   --json                Output result as JSON
 ```
 
-### `zylora list`
+### `zy list`
 
 List functions in the active org.
 
 ```bash
-zylora list [--json]
+zy list [--json]
 ```
 
-### `zylora delete`
+### `zy delete`
 
 Delete a function and all its versions.
 
 ```bash
-zylora delete <function> [--yes]
+zy delete <function> [--yes]
 ```
 
 ---
 
 ## Versions
 
-### `zylora versions`
+### `zy versions`
 
 List versions of a function.
 
 ```bash
-zylora versions <function>
+zy versions <function>
 ```
 
-### `zylora rollback`
+### `zy rollback`
 
 Roll back to a previous version.
 
 ```bash
-zylora rollback <function> --version <v>
+zy rollback <function> --version <v>
 ```
 
-### `zylora traffic`
+### `zy traffic`
 
 Split traffic between versions.
 
 ```bash
-zylora traffic set <function> --version <v1> --weight 80 --version <v2> --weight 20
+zy traffic set <function> --version <v1> --weight 80 --version <v2> --weight 20
 ```
 
 ---
 
 ## Logs
 
-### `zylora logs`
+### `zy logs`
 
 Stream invocation logs.
 
 ```bash
-zylora logs <function> [options]
+zy logs <function> [options]
 
 Options:
   --tail            Follow live logs
@@ -156,21 +156,21 @@ Options:
 
 ## Secrets
 
-### `zylora secret set`
+### `zy secret set`
 
 ```bash
-zylora secret set HF_TOKEN=hf_...
-zylora secret set --file .env.production
+zy secret set HF_TOKEN=hf_...
+zy secret set --file .env.production
 ```
 
-### `zylora secret list`
+### `zy secret list`
 
 ```bash
-zylora secret list
+zy secret list
 ```
 
-### `zylora secret delete`
+### `zy secret delete`
 
 ```bash
-zylora secret delete HF_TOKEN
+zy secret delete HF_TOKEN
 ```
