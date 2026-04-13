@@ -1,11 +1,11 @@
 ---
 title: Architecture
-description: How Zylora works under the hood — from deploy to invocation.
+description: High-level platform architecture and request flow.
 ---
 
 ## Overview
 
-Zylora is a serverless GPU runtime built on a provider-agnostic architecture. Functions are deployed as Docker containers and run on demand across multiple GPU cloud providers.
+Zylora is a serverless GPU runtime designed for enterprise workloads. Functions are deployed as containers and executed on demand across a multi-provider compute network.
 
 ```
 ┌─────────────────────────────────────┐
@@ -23,37 +23,33 @@ Zylora is a serverless GPU runtime built on a provider-agnostic architecture. Fu
 │  Router · Scheduler · Metering      │
 └────┬──────────────────────┬─────────┘
      │                      │
-┌────▼─────┐          ┌─────▼──────┐
-│ RunPod   │          │  Vast.ai   │  ← GPU Providers
-│ (A100s)  │          │  (H100s)   │
-└──────────┘          └────────────┘
+┌────▼────────────────────────────────┐
+│    Multi-Provider GPU Compute       │
+│  Capacity · Failover · Placement    │
+└─────────────────────────────────────┘
 ```
 
 ## Request Lifecycle
 
-1. **API Gateway** receives the invocation request, verifies the bearer token, checks rate limits, and assigns a `request_id` (UUID v7).
-2. **Router** selects the optimal GPU provider based on availability, cost, and latency targets.
-3. **Scheduler** starts a cold container or routes to a warm instance. If a VRAM snapshot exists for this function version, it's restored in under 250ms.
-4. **Runner** executes the function inside the container, streams output if yielding, and reports usage events.
-5. **Metering** records GPU-milliseconds and writes a `usage_event` for billing.
-6. **Response** is returned to the caller with full timing and cost metadata.
+1. **API Gateway** receives the invocation request, validates auth, applies policy checks, and attaches tracing metadata.
+2. **Routing layer** selects an execution target using availability, policy, and latency objectives.
+3. **Execution control plane** allocates runtime capacity and routes to warm or newly started workers.
+4. **Runtime** executes the function, supports streaming responses, and emits usage telemetry.
+5. **Metering** records billable usage for cost visibility and invoicing.
+6. **Response** returns output with timing and request metadata.
 
-## VRAM Snapshots
+## Performance Strategy
 
-The key to Zylora's sub-250ms cold starts. When a function completes:
-
-1. GPU memory state is serialized (LZ4-compressed) and stored in Cloudflare R2.
-2. On the next cold start, the snapshot is restored via `cudaMemcpy` — bypassing model loading entirely.
-
-Snapshots are version-pinned and invalidated on redeploy.
+Zylora uses multiple warm-path techniques to reduce startup latency and improve p95 response times for repeated workloads. Runtime state is version-aware and safely refreshed on redeploy.
 
 ## Provider Abstraction
 
-All GPU providers are behind a `GpuProvider` trait. Zylora routes across RunPod, Vast.ai, and GCP dynamically based on spot pricing and availability. Provider failures are handled transparently with automatic rerouting.
+Compute providers are integrated behind a common abstraction layer. This allows controlled routing, policy enforcement, and transparent failover without changing user-facing APIs.
 
-## Durability
+## Reliability & Data Guarantees
 
 - All entity IDs are UUID v7 (time-sortable, no hotspots)
 - All timestamps are UTC with timezone info (`TIMESTAMPTZ`)
 - Usage events are append-only with partition pruning by month
 - Billing is in integer cents — no floating point
+- Multi-provider failover is automatic when capacity or health conditions change
