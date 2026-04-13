@@ -1,3 +1,254 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
+
+:root {
+	--font-sans: var(--font-zylora-sans), 'Segoe UI', sans-serif;
+	--font-mono: var(--font-zylora-mono), 'Courier New', monospace;
+
+	--color-fd-background: oklch(0.985 0.004 286);
+	--color-fd-foreground: oklch(0.19 0.02 280);
+	--color-fd-muted: oklch(0.965 0.007 280);
+	--color-fd-muted-foreground: oklch(0.49 0.02 280);
+	--color-fd-popover: oklch(0.99 0.004 280);
+	--color-fd-popover-foreground: oklch(0.2 0.02 280);
+	--color-fd-card: oklch(0.975 0.008 280);
+	--color-fd-card-foreground: oklch(0.2 0.02 280);
+	--color-fd-border: oklch(0.85 0.02 280 / 42%);
+	--color-fd-primary: oklch(0.57 0.22 286);
+	--color-fd-primary-foreground: oklch(0.98 0.004 286);
+	--color-fd-secondary: oklch(0.95 0.01 280);
+	--color-fd-secondary-foreground: oklch(0.26 0.02 280);
+	--color-fd-accent: oklch(0.93 0.03 286 / 55%);
+	--color-fd-accent-foreground: oklch(0.24 0.03 286);
+	--color-fd-ring: oklch(0.62 0.2 286);
+
+	--zylora-grid: color-mix(in oklab, var(--color-fd-primary) 12%, transparent);
+}
+
+.dark {
+	--color-fd-background: oklch(0.16 0.02 286);
+	--color-fd-foreground: oklch(0.93 0.01 286);
+	--color-fd-muted: oklch(0.215 0.02 286);
+	--color-fd-muted-foreground: oklch(0.72 0.02 286);
+	--color-fd-popover: oklch(0.2 0.02 286);
+	--color-fd-popover-foreground: oklch(0.92 0.01 286);
+	--color-fd-card: oklch(0.19 0.02 286);
+	--color-fd-card-foreground: oklch(0.94 0.01 286);
+	--color-fd-border: oklch(0.38 0.03 286 / 36%);
+	--color-fd-primary: oklch(0.78 0.15 286);
+	--color-fd-primary-foreground: oklch(0.21 0.03 286);
+	--color-fd-secondary: oklch(0.24 0.02 286);
+	--color-fd-secondary-foreground: oklch(0.89 0.02 286);
+	--color-fd-accent: oklch(0.34 0.06 286 / 42%);
+	--color-fd-accent-foreground: oklch(0.95 0.01 286);
+	--color-fd-ring: oklch(0.72 0.16 286);
+
+	--zylora-grid: color-mix(in oklab, var(--color-fd-primary) 25%, transparent);
+}
+
+html,
+body {
+	min-height: 100%;
+}
+
+body {
+	font-family: var(--font-sans);
+	background:
+		radial-gradient(1200px 720px at 78% -12%, color-mix(in oklab, var(--color-fd-primary) 18%, transparent), transparent 70%),
+		radial-gradient(900px 620px at 14% 118%, color-mix(in oklab, var(--color-fd-primary) 10%, transparent), transparent 72%),
+		var(--color-fd-background);
+	color: var(--color-fd-foreground);
+}
+
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background-image:
+		linear-gradient(to right, var(--zylora-grid) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--zylora-grid) 1px, transparent 1px);
+	background-size: 32px 32px;
+	mask-image: radial-gradient(ellipse at center, black 36%, transparent 82%);
+}
+
+#nd-docs-layout {
+	--fd-layout-width: 112rem;
+	--fd-sidebar-width: 18rem;
+	--fd-toc-width: 16.5rem;
+}
+
+#nd-sidebar,
+#nd-toc,
+[data-toc-popover] > header {
+	backdrop-filter: blur(10px) saturate(130%);
+}
+
+#nd-sidebar {
+	border-right: 1px solid color-mix(in oklab, var(--color-fd-border) 80%, transparent);
+	background: color-mix(in oklab, var(--color-fd-card) 88%, transparent);
+}
+
+#nd-toc {
+	padding-top: 3.25rem;
+}
+
+#nd-sidebar a,
+#nd-sidebar button,
+#nd-toc a {
+	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+#nd-sidebar a[data-active='true'],
+#nd-sidebar button[data-active='true'] {
+	border: 1px solid color-mix(in oklab, var(--color-fd-primary) 38%, transparent);
+	box-shadow: 0 8px 24px color-mix(in oklab, var(--color-fd-primary) 20%, transparent);
+}
+
+#nd-toc a[aria-current='true'] {
+	color: var(--color-fd-primary);
+	font-weight: 600;
+}
+
+#nd-docs-layout article {
+	font-size: 15.5px;
+	line-height: 1.82;
+	letter-spacing: 0.01em;
+}
+
+#nd-docs-layout article h1,
+#nd-docs-layout article h2,
+#nd-docs-layout article h3,
+#nd-docs-layout article h4 {
+	letter-spacing: -0.03em;
+	line-height: 1.15;
+	font-weight: 700;
+	text-wrap: balance;
+}
+
+#nd-docs-layout article h1 {
+	font-size: clamp(2.2rem, 4vw, 3rem);
+}
+
+#nd-docs-layout article h2 {
+	margin-top: 2.2rem;
+	border-top: 1px solid color-mix(in oklab, var(--color-fd-border) 76%, transparent);
+	padding-top: 1.6rem;
+}
+
+#nd-docs-layout article p {
+	color: color-mix(in oklab, var(--color-fd-foreground) 88%, transparent);
+}
+
+#nd-docs-layout article a {
+	text-decoration-thickness: 0.08em;
+	text-underline-offset: 0.18em;
+	text-decoration-color: color-mix(in oklab, var(--color-fd-primary) 55%, transparent);
+}
+
+#nd-docs-layout article a:hover {
+	color: var(--color-fd-primary);
+	text-decoration-color: currentColor;
+}
+
+#nd-docs-layout article :not(pre) > code {
+	font-family: var(--font-mono);
+	font-size: 0.86em;
+	border: 1px solid color-mix(in oklab, var(--color-fd-border) 80%, transparent);
+	background: color-mix(in oklab, var(--color-fd-accent) 62%, transparent);
+	border-radius: 0.5rem;
+	padding: 0.2rem 0.42rem;
+}
+
+#nd-docs-layout .shiki {
+	border: 1px solid color-mix(in oklab, var(--color-fd-border) 76%, transparent);
+	border-radius: 0.9rem;
+	box-shadow: 0 16px 34px color-mix(in oklab, var(--color-fd-background) 70%, transparent);
+}
+
+#nd-docs-layout article pre {
+	padding-block: 0.6rem;
+}
+
+#nd-docs-layout article blockquote {
+	border-left: 3px solid color-mix(in oklab, var(--color-fd-primary) 52%, transparent);
+	background: color-mix(in oklab, var(--color-fd-accent) 38%, transparent);
+	border-radius: 0.7rem;
+	padding: 0.8rem 1rem;
+}
+
+#nd-docs-layout article table {
+	border: 1px solid color-mix(in oklab, var(--color-fd-border) 76%, transparent);
+	border-radius: 0.9rem;
+	overflow: hidden;
+}
+
+#nd-docs-layout article th {
+	font-weight: 600;
+	color: color-mix(in oklab, var(--color-fd-foreground) 95%, transparent);
+	background: color-mix(in oklab, var(--color-fd-secondary) 60%, transparent);
+}
+
+#nd-docs-layout article td,
+#nd-docs-layout article th {
+	border-color: color-mix(in oklab, var(--color-fd-border) 72%, transparent);
+}
+
+#nd-docs-layout article kbd {
+	font-family: var(--font-mono);
+	border-radius: 0.45rem;
+	border: 1px solid color-mix(in oklab, var(--color-fd-border) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	#nd-docs-layout article > * {
+		animation: docs-fade-up 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+	}
+
+	#nd-docs-layout article > *:nth-child(2) {
+		animation-delay: 40ms;
+	}
+
+	#nd-docs-layout article > *:nth-child(3) {
+		animation-delay: 80ms;
+	}
+
+	#nd-docs-layout article > *:nth-child(4) {
+		animation-delay: 120ms;
+	}
+
+	#nd-docs-layout article > *:nth-child(5) {
+		animation-delay: 160ms;
+	}
+}
+
+@keyframes docs-fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (max-width: 80rem) {
+	#nd-docs-layout {
+		--fd-toc-width: 14rem;
+	}
+}
+
+@media (max-width: 48rem) {
+	#nd-docs-layout article {
+		font-size: 15px;
+		line-height: 1.75;
+	}
+
+	#nd-docs-layout article h1 {
+		font-size: clamp(1.95rem, 8vw, 2.4rem);
+	}
+}
