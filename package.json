@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "pnpm run build && wrangler pages deploy"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
     "@types/mdx": "^2.0.13",
+    "wrangler": "^4.81.1",
     "@types/node": "25.6.0",
     "@types/react": "19.2.14",
     "typescript": "6.0.2"
